@@ -18,6 +18,7 @@ BEGIN
     * DATE       : 2019-10-02
     * CREATED BY : Daniel Salgado
     * DESCRIPTION: Restore database from a file; rename the logical files; move physical files
+    *              exec master.dbo.uspRestoreFromBackup 'dvmBVS', 'C:\Shares\Storage\Daniel\BronsonVeterinaryServices\SalesDataCheck\DVMDEBAK.BAK'
     **************************************************************************************/
 
     /*
@@ -89,7 +90,7 @@ BEGIN
     IF @Version >= 12  
         ALTER TABLE #FileList ADD SnapshotURL nvarchar(360) NULL;
 
-    SET @FileListCmd = N'RESTORE FILELISTONLY FROM DISK = N''' + @BackupFile + N''';';
+    SET @FileListCmd = REPLACE('RESTORE FILELISTONLY FROM DISK = ''?BackupFile'';', '?BackupFile', @BackupFile);
 
     INSERT INTO #FileList
     EXEC (@FileListCmd);
@@ -113,8 +114,7 @@ BEGIN
     SET @MoveFiles = REPLACE(@MoveFiles, char(10), char(13) + char(10));
     SET @MoveFiles = LEFT(@MoveFiles, LEN(@MoveFiles) - 2);
 
-    -- SET @RestoreCmd = N'RESTORE DATABASE ' + @DBName + N'FROM DISK = N''' + @BackupFile + N''' WITH REPLACE , RECOVERY, STATS = 5' + @MoveFiles;
-    SET @RestoreCmd = N'RESTORE DATABASE ?DBName FROM DISK = ?BackupFile WITH REPLACE, RECOVERY, STATS = 5' + @MoveFiles;
+    SET @RestoreCmd = N'RESTORE DATABASE ?DBName FROM DISK = ''?BackupFile'' WITH REPLACE, RECOVERY, STATS = 5' + @MoveFiles;
     SET @RestoreCmd = REPLACE(@RestoreCmd, '?DBName', @DBName);
     SET @RestoreCmd = REPLACE(@RestoreCmd, '?BackupFile', @BackupFile);
 
